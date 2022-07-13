@@ -5,8 +5,11 @@ from pyrogram.types import  Message , ReplyKeyboardMarkup
 from plugins import videoProccessor
 from time import time
 from math import ceil
-
-
+from urllib.parse import quote_plus
+from plugins.uploadFileMessageProcess import get_name , get_hash
+import hashlib
+from plugins.database import insert  , current_domain
+from json import dumps
 
 class messages:
 
@@ -18,7 +21,9 @@ class messages:
     
     waitingForResolution = False
     highestResolution = None
-    highestResolutionMessageID = None
+    movieId = None
+
+    links = []
     
     
     waitingForFile = False
@@ -99,9 +104,31 @@ class messages:
             if (self.waitingForFile and not self.waitingForResolution ) or True:
                 
                 #forward the file to channel
+                
                 frowardedMessage = message.forward(chat_id=Channel_ID)
+                
+                txt = f"{time()}"
+                id = hashlib.md5(txt.encode()).hexdigest()
 
-                self.highestResolutionMessageID = frowardedMessage.id
+
+                link = f"{frowardedMessage.id}/{quote_plus(get_name(frowardedMessage,True))}?hash={get_hash(frowardedMessage,True)}"
+                
+                links  = [{
+                        'res'   : self.highestResolution ,
+                        'link' : link 
+                    }]
+
+                
+                insert(id, links, self.name)
+
+                domain = current_domain()
+
+                message.reply(f"http://{domain}/index.php?id={id}")
+
+
+                
+
+                self.movieId = id
                 
                 self.waitingForFile = False
                 self.adding = False
@@ -109,17 +136,13 @@ class messages:
                 self.waitingForResolution = False
                 self.waitingForFile = False
                 
-                message.reply("Done")
-                message.reply("Now Proccessing the movie")
+                # message.reply(f"Done , its Link is {link}")
+                # message.reply("Done , Now Proccessing the movie")
 
                 # now proccess it 
 
-                videoProccessor(message , self.highestResolution)
-                start = time()
-                message.reply('downloading')
-                path = message.download()
-                message.reply(f"media downloaded in {ceil(time() - start)}s")
-                message.reply_document(path)
+                videoProccessor(message , self.highestResolution , id)
+                
                 
             
         

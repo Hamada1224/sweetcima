@@ -4,9 +4,10 @@ from vars import client
 from time import time
 from math import ceil
 from plugins import converter
+from os import system
 
 
-def videoProccessor (message : Message , highestResolution):
+def videoProccessor (message : Message , highestResolution , id):
     
     # first Download the file
 
@@ -15,9 +16,13 @@ def videoProccessor (message : Message , highestResolution):
     start = time()
     filePath = message.download()
     
-    print(f"Download finished in {ceil(time() - start)}s")
+    newName = f"downloads/{ceil(time())}.mp4"
+    system(f"mv {filePath} {newName}")
     
-    messageToKeepUserUpdated.edit(f"Downloaded , Now Proccessing the video")
-    converter(filePath,highestResolution,message)
+    filePath = newName
+
+    messageToKeepUserUpdated.reply(f"Download finished in {ceil(time() - start)}s")
+    
+    converter(filePath,highestResolution,message , id)
 
 modules[__name__] = videoProccessor

@@ -1,15 +1,14 @@
 from sys import modules
-def converter(fileName , highestResolution , message):
+def converter(fileName , highestResolution , message , id ):
 
     import os
     from math import ceil
     from time import time
     from threading import Thread
     from vars import resolutions
-    import uploader
+    from plugins import uploader
 
     x = filter(lambda x : int(x) < int(highestResolution) , resolutions)
-    
     
     for r in x :
     
@@ -21,10 +20,14 @@ def converter(fileName , highestResolution , message):
         width = ceil( int(r) * aspect ) 
         
 
-        os.system(f"ffmpeg -i {fileName} -c:v libx264 -crf 22 -vf scale={width}:{r}  {newName}")
+        os.system(f"ffmpeg -i {fileName} -c:v libx264 -crf 24 -vf scale={width}:{r}  {newName}")
+        os.system('clear')
         
-        print(f"finished quailty {r}")
-        uploader(newName,r,message)
+
+        newThread = Thread(target=uploader,args=[newName,r,message,id])
+        newThread.start()
+
+    os.remove(fileName)
         
         
         
